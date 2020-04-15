@@ -1,9 +1,10 @@
-﻿using System;
+﻿using Mirror;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Player : MonoBehaviour
+public class Player : NetworkBehaviour
 {
     // Serialized fields
     [SerializeField] float mRunSpeed = 10f;
@@ -34,10 +35,13 @@ public class Player : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        Run();
-        Jump();
-        FlipSprite();
-        Shoot();
+        if (isLocalPlayer)
+        {
+            Run();
+            Jump();
+            FlipSprite();
+            Shoot();
+        }
     }
 
     public void TakeDamage(int damage)
