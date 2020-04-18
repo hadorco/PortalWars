@@ -33,9 +33,9 @@ public class Player : NetworkBehaviour
     }
 
     // Update is called once per frame
-    void Update()
+    void LateUpdate()
     {
-        if (isLocalPlayer)
+        if (base.hasAuthority)
         {
             Run();
             Jump();
@@ -51,7 +51,8 @@ public class Player : NetworkBehaviour
         Debug.Log("Player health after taking damage: " + mHealth);
         if (mHealth <= 0)
         {
-            Destroy(gameObject);
+            mAnimator.SetTrigger("Dead");
+            //Destroy(gameObject);
         }
     }
 

@@ -17,6 +17,7 @@ GameObject:
   - component: {fileID: 1059619460}
   - component: {fileID: 6064463281390151850}
   - component: {fileID: 7318379895590049883}
+  - component: {fileID: 852872704223565818}
   m_Layer: 0
   m_Name: Robot
   m_TagString: Robot
@@ -122,6 +123,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e090a5bb1f3129741b022165410610a1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  syncMode: 0
+  syncInterval: 0.1
   mRunSpeed: 7
   mJumpSpeed: 17
   mProjectilePrefab: {fileID: 5107257287885619382, guid: 3250a7a9277e9ad45b8c9e5d2c57e167,
@@ -221,6 +224,22 @@ MonoBehaviour:
   localPositionSensitivity: 0.01
   localRotationSensitivity: 0.01
   localScaleSensitivity: 0.01
+--- !u!114 &852872704223565818
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3145833788646823800}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7f6f3bf89aa97405989c802ba270f815, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  syncMode: 0
+  syncInterval: 0.1
+  clientAuthority: 1
+  animator: {fileID: 8799494244289537697}
 --- !u!1 &4565539506545056441
 GameObject:
   m_ObjectHideFlags: 0
