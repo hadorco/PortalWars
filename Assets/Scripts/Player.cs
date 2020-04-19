@@ -1,10 +1,10 @@
-﻿using Mirror;
+﻿using Photon.Pun;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Player : NetworkBehaviour
+public class Player : MonoBehaviour
 {
     // Serialized fields
     [SerializeField] float mRunSpeed = 10f;
@@ -33,9 +33,9 @@ public class Player : NetworkBehaviour
     }
 
     // Update is called once per frame
-    void LateUpdate()
+    void Update()
     {
-        if (base.hasAuthority)
+        if (GetComponent<PhotonView>().IsMine)
         {
             Run();
             Jump();
