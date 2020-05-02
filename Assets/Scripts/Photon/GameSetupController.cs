@@ -14,6 +14,6 @@ public class GameSetupController : MonoBehaviour
 
     private void CreatePlayer()
     {
-        PhotonNetwork.Instantiate(Path.Combine("Prefabs", "Robot"), Vector3.zero, Quaternion.identity);
+        PhotonNetwork.Instantiate("Prefabs\\Robot", new Vector3(-3f,4f,0f), Quaternion.identity);
     }
 }

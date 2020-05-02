@@ -6,6 +6,8 @@ using UnityEngine;
 
 public class Player : MonoBehaviour
 {
+    #region Member Variables
+
     // Serialized fields
     [SerializeField] float mRunSpeed = 10f;
     [SerializeField] float mJumpSpeed = 15f;
@@ -17,25 +19,29 @@ public class Player : MonoBehaviour
     Animator mAnimator;
     CapsuleCollider2D mBodyCollider;
     BoxCollider2D mFeetCollider;
-    private Dictionary<string, string> mInputDictionary;
+    PhotonView mPhotonView;
+    int mForegroundLayer = 0; // A number that represents the "Foreground" layer of the scene
 
     // State
     int mHealth = 100;
 
-    // Start is called before the first frame update
-    void Start()
+    #endregion
+
+    #region Unity Lifetime Functions
+
+    void Awake()
     {
         mRigidBody = GetComponent<Rigidbody2D>();
         mAnimator = GetComponent<Animator>();
         mBodyCollider = GetComponent<CapsuleCollider2D>();
         mFeetCollider = GetComponent<BoxCollider2D>();
-        mInputDictionary = InputHelper.CalibrateInput(gameObject.tag);
+        mPhotonView = GetComponent<PhotonView>();
+        mForegroundLayer = LayerMask.GetMask("Foreground");
     }
 
-    // Update is called once per frame
     void Update()
     {
-        if (GetComponent<PhotonView>().IsMine)
+        if (mPhotonView.IsMine)
         {
             Run();
             Jump();
@@ -44,68 +50,64 @@ public class Player : MonoBehaviour
         }
     }
 
+    #endregion
+
+    #region Public Functions
+
+    // Called from the projectile that hits the player
     public void TakeDamage(int damage)
     {
-        mHealth -= damage;
-
-        Debug.Log("Player health after taking damage: " + mHealth);
-        if (mHealth <= 0)
-        {
-            mAnimator.SetTrigger("Dead");
-            //Destroy(gameObject);
-        }
+        mPhotonView.RPC("RpcTakeDamage", RpcTarget.AllBuffered, damage);
     }
 
-    private void FireBullet()
-    {
-        Projectile bullet = Instantiate(mProjectilePrefab, mFirePoint.transform.position, mFirePoint.transform.rotation).GetComponent<Projectile>();
-        bullet.SetSpriteDirection(transform.localScale);
-        bullet.SetVelocity(transform.right * transform.localScale.x);
-    }
+    #endregion
+
+    #region Private Functions
 
     private void Shoot()
     {
-        if (Input.GetButtonDown(mInputDictionary["Fire"]))
+        if (Input.GetButtonDown("Fire"))
         {
-            //Create bullet
-            FireBullet();
+            // Create and fire bullet
+            mPhotonView.RPC("RpcFireBullet", RpcTarget.AllBuffered);
 
-            //Set animation
+            // Start animation
             mAnimator.SetTrigger("Shooting");
         }
     }
 
     private void Jump()
     {
-        int foregroundLayer = LayerMask.GetMask("Foreground");
-
-        if (Input.GetButtonDown(mInputDictionary["Jump"]) && mFeetCollider.IsTouchingLayers(foregroundLayer))
+        if (Input.GetButtonDown("Jump") && mFeetCollider.IsTouchingLayers(mForegroundLayer))
         {
             Vector2 currentVelocity = mRigidBody.velocity;
             currentVelocity += new Vector2(0, mJumpSpeed);
             mRigidBody.velocity = currentVelocity;
 
+            // Start animation
             mAnimator.SetBool("Jumping", true);
         }
         // We use 0.005f because when landing into corners our rigidbody's velocity still has a nonzero value, so the animation gets stuck
-        else if (mFeetCollider.IsTouchingLayers(foregroundLayer) && Mathf.Abs(mRigidBody.velocity.y) < 0.0005f)
+        else if (mFeetCollider.IsTouchingLayers(mForegroundLayer) && Mathf.Abs(mRigidBody.velocity.y) < 0.0005f)
         {
+            // Stop animation
             mAnimator.SetBool("Jumping", false);
         }
     }
 
     private void Run()
     {
-        float horizontalAxis = Input.GetAxis(mInputDictionary["Horizontal"]);
+        float horizontalAxis = Input.GetAxis("Horizontal");
         Vector2 newVelocity = new Vector2(horizontalAxis * mRunSpeed, mRigidBody.velocity.y);
         mRigidBody.velocity = newVelocity;
         if (horizontalAxis != 0)
         {
-            //Change animation
+            // Start animation
             mAnimator.SetBool("Running", true);
         }
         else
         {
+            // Stop animation
             mAnimator.SetBool("Running", false);
         }
     }
@@ -125,8 +127,35 @@ public class Player : MonoBehaviour
         gameObject.transform.localScale = currentScale;
     }
 
-    private void CalibrateInput()
-    {
+    #endregion
 
+    #region RPC Functions
+
+    [PunRPC]
+    private void RpcTakeDamage(int damage)
+    {
+        if (mPhotonView.IsMine) // Unsure whether this is necessary
+        {
+            mHealth -= damage;
+
+            Debug.Log("Player: " + mPhotonView.name + ", health after taking damage: " + mHealth);
+            if (mHealth <= 0)
+            {
+                mAnimator.SetTrigger("Dead");
+                PhotonNetwork.Destroy(gameObject);
+                PhotonNetwork.Instantiate("Prefabs\\Robot", new Vector3(0, 0, 0), Quaternion.identity);
+                //Destroy(gameObject);
+            }
+        }
     }
+
+    [PunRPC]
+    private void RpcFireBullet()
+    {
+        Projectile bullet = Instantiate(mProjectilePrefab, mFirePoint.transform.position, mFirePoint.transform.rotation).GetComponent<Projectile>();
+        bullet.SetSpriteDirection(transform.localScale);
+        bullet.SetVelocity(transform.right * transform.localScale.x);
+    }
+
+    #endregion
 }

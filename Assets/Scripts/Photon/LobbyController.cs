@@ -30,7 +30,7 @@ public class LobbyController : MonoBehaviourPunCallbacks
 
     public override void OnJoinRandomFailed(short returnCode, string message)
     {
-        Debug.Log("Jion Fail!!!");
+        Debug.Log("Join Fail!!!");
         CreateRoom();
     }
 
