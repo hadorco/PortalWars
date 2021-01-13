@@ -31,10 +31,13 @@ public class Bullet : MonoBehaviourPun, Projectile
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        Player opponent = collision.GetComponent<Player>();
-        if (opponent != null && PhotonNetwork.IsMasterClient)
+        Player player = collision.GetComponent<Player>();
+        if (player != null)
         {
-            opponent.TakeDamage(mDamage);
+            if (mPhotonView.IsMine)
+            {
+                player.TakeDamage(mDamage);
+            }
         }
 
         if (mPhotonView.IsMine)
@@ -45,7 +48,7 @@ public class Bullet : MonoBehaviourPun, Projectile
         }
     }
 
-    [PunRPC]
+    //[PunRPC]
     private void DestroyBullet(PhotonMessageInfo info)
     {
         // To account for the spawning of a new projectile in the destination portal, we use a small delay before destroying

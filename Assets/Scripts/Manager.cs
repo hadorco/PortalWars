@@ -37,11 +37,11 @@ public class Manager : MonoBehaviour
             //mPortalContainer.CreatePortals(2);
             Portal portal1 = Instantiate(mPortalPrefab, new Vector3(-11.5f, 1.5f, 0f), Quaternion.identity).GetComponent<Portal>();
             portal1.mId = 1;
-            Portal portal2 = Instantiate(mPortalPrefab, new Vector3(12.5f, -3.5f, 0f), Quaternion.identity).GetComponent<Portal>();
+            Portal portal2 = Instantiate(mPortalPrefab, new Vector3(-11.5f, -1.5f, 0f), Quaternion.identity).GetComponent<Portal>();
             portal2.mId = 2;
             portal1.name = "portal1";
             portal2.name = "portal2";
-            portal2.tag = "PortalRight";
+            //portal2.tag = "PortalRight";
             portal1.CalculateSpawnInfo();
             portal2.CalculateSpawnInfo();
             portal1.AssignDestinationPortal();

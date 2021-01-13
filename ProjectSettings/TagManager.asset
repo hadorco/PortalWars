@@ -53,6 +53,9 @@ TagManager:
   - name: Foreground
     uniqueID: 2897359573
     locked: 0
+  - name: UI
+    uniqueID: 2268383259
+    locked: 0
   - name: Portals
     uniqueID: 2562571245
     locked: 0

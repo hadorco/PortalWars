@@ -157,13 +157,14 @@ public class Portal : MonoBehaviourPun
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        //if (mPhotonView.IsMine)
+        if (mPhotonView.IsMine)
         {
             Projectile projectile = collision.GetComponent<Projectile>();
             if (projectile != null)
             {
                 string projectileTypeName = projectile.GetType().Name;
-                mPhotonView.RPC("RpcSpawnClone", RpcTarget.AllBuffered, projectileTypeName);
+                //mPhotonView.RPC("RpcSpawnClone", RpcTarget.All, projectileTypeName);
+                mDestinationPortal.SpawnClone(projectileTypeName);
             }
         }
     }
@@ -171,7 +172,7 @@ public class Portal : MonoBehaviourPun
     #endregion
 
 
-    [PunRPC]
+    //[PunRPC]
     public void RpcAssignDestinationPortal()
     {
         Portal destinationPortal = null;
@@ -195,7 +196,7 @@ public class Portal : MonoBehaviourPun
         //Debug.Log("Assigning destination portal: " + gameObject.name + "-> " + mDestinationPortal.name);
     }
 
-    [PunRPC]
+    //[PunRPC]
     public void RpcCalculateSpawnInfo()
     {
         Vector3 positionOffset = new Vector3(0, 0, 0);
@@ -226,7 +227,7 @@ public class Portal : MonoBehaviourPun
         mSpawnVelocity = newVelocity;
     }
 
-    [PunRPC]
+    //[PunRPC]
     public void RpcSpawnClone(string projectileTypeName)
     {
         //if (mPhotonView.IsMine)

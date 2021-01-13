@@ -4,7 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Player : MonoBehaviour
+public class Player : MonoBehaviour, IPunObservable
 {
     #region Member Variables
 
@@ -13,6 +13,7 @@ public class Player : MonoBehaviour
     [SerializeField] float mJumpSpeed = 15f;
     [SerializeField] GameObject mProjectilePrefab;
     [SerializeField] GameObject mFirePoint; // The starting point from which bullets are fired
+    [SerializeField] HealthBar mHealthBar;
 
     // Cached references
     Rigidbody2D mRigidBody;
@@ -37,8 +38,23 @@ public class Player : MonoBehaviour
         mFeetCollider = GetComponent<BoxCollider2D>();
         mPhotonView = GetComponent<PhotonView>();
         mForegroundLayer = LayerMask.GetMask("Foreground");
+
+        Debug.Log("Num of playerssssss: " + PhotonNetwork.CurrentRoom.PlayerCount);
+
+        if (mPhotonView.IsMine)
+        {
+            mHealthBar = GameObject.Find("HealthBarLeft").GetComponent<HealthBar>();
+        }
+        else
+        {
+            mHealthBar = GameObject.Find("HealthBarRight").GetComponent<HealthBar>();
+        }
     }
 
+    private void Start()
+    {
+        mHealthBar.SetMaxHealth(mHealth);
+    }
     void Update()
     {
         if (mPhotonView.IsMine)
@@ -58,6 +74,8 @@ public class Player : MonoBehaviour
     public void TakeDamage(int damage)
     {
         mPhotonView.RPC("RpcTakeDamage", RpcTarget.AllBuffered, damage);
+
+        mHealthBar.SetHealth(mHealth);
     }
 
     #endregion
@@ -80,9 +98,9 @@ public class Player : MonoBehaviour
     {
         if (Input.GetButtonDown("Jump") && mFeetCollider.IsTouchingLayers(mForegroundLayer))
         {
-            Vector2 currentVelocity = mRigidBody.velocity;
-            currentVelocity += new Vector2(0, mJumpSpeed);
-            mRigidBody.velocity = currentVelocity;
+            mPhotonView.RPC("RpcJump", RpcTarget.All);
+            
+            //mRigidBody.AddForce(new Vector2(0, 110000 * Time.deltaTime));
 
             // Start animation
             mAnimator.SetBool("Jumping", true);
@@ -132,19 +150,29 @@ public class Player : MonoBehaviour
     #region RPC Functions
 
     [PunRPC]
+    private void RpcJump()
+    {
+        Vector2 currentVelocity = mRigidBody.velocity;
+        currentVelocity += new Vector2(0, mJumpSpeed);
+        mRigidBody.velocity = currentVelocity;
+    }
+
+    [PunRPC]
     private void RpcTakeDamage(int damage)
     {
-        if (mPhotonView.IsMine) // Unsure whether this is necessary
+        if (mPhotonView.IsMine)
         {
             mHealth -= damage;
+        }
 
-            Debug.Log("Player: " + mPhotonView.name + ", health after taking damage: " + mHealth);
-            if (mHealth <= 0)
+        Debug.Log("Player: " + mPhotonView.Owner.NickName + ", health after taking damage: " + mHealth);
+        if (mHealth <= 0)
+        {
+            mAnimator.SetTrigger("Dead");
+            if (mPhotonView.IsMine)
             {
-                mAnimator.SetTrigger("Dead");
                 PhotonNetwork.Destroy(gameObject);
                 PhotonNetwork.Instantiate("Prefabs\\Robot", new Vector3(0, 0, 0), Quaternion.identity);
-                //Destroy(gameObject);
             }
         }
     }
@@ -155,6 +183,22 @@ public class Player : MonoBehaviour
         Projectile bullet = Instantiate(mProjectilePrefab, mFirePoint.transform.position, mFirePoint.transform.rotation).GetComponent<Projectile>();
         bullet.SetSpriteDirection(transform.localScale);
         bullet.SetVelocity(transform.right * transform.localScale.x);
+    }
+
+    #endregion
+
+    #region Photon Interface Functions
+
+    void IPunObservable.OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo messageInfo)
+    {
+        if (stream.IsWriting)
+        {
+            stream.SendNext(mHealth);
+        }
+        else
+        {
+            mHealth = (int)stream.ReceiveNext();
+        }
     }
 
     #endregion
